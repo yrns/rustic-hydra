@@ -1,0 +1,3 @@
+* rustic-hydra
+
+A hydra version of rustic-popup that includes running examples and bin targets.
