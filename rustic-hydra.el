@@ -62,13 +62,33 @@
                        (format "cargo run --bin %s" (intern x))))
             :caller 'rustic-hydra-run-bin))
 
+(defun rustic-hydra-add-fn (input)
+  "Search crates."
+  (or
+   (ivy-more-chars)
+   (progn
+     (counsel--async-command
+      (format "cargo search %s" input))
+     '("" "working..."))))
+
+(defun rustic-hydra-add (&optional initial-input)
+  "Add a dependency."
+  (interactive)
+  (ivy-read "Add: " #'rustic-hydra-add-fn
+            :initial-input initial-input
+            :dynamic-collection t
+            :history 'rustic-hydra-add-history
+            :action (lambda (a)
+                      (rustic-run-cargo-command (format "cargo add %s" (car (split-string a)))))
+            :caller 'rustic-hydra-add))
+
 (defhydra rustic-hydra (:color blue :hint nil)
   "
 _a_: backtrace: %`rustic-compile-backtrace
 _l_: run last: %`rustic-hydra-last
 
-_r_: run            _f_: fmt         _k_: check     _p_: rustic popup
-_n_: run bin        _c_: clippy      _t_: test      _q_: cancel
+_r_: run            _f_: fmt         _k_: check    _+_: add   _p_: rustic popup
+_n_: run bin        _c_: clippy      _t_: test     _-_: rm    _q_: cancel
 _x_: run example    _o_: outdated    _d_: doc
 _b_: build          _e_: clean
 "
@@ -87,6 +107,8 @@ _b_: build          _e_: clean
   ("k" rustic-cargo-check)
   ("t" rustic-cargo-test)
   ("d" rustic-cargo-doc)
+  ("+" rustic-hydra-add)
+  ("-" rustic-hydra-rm)
   ("q" nil))
 
 (provide 'rustic-hydra)
