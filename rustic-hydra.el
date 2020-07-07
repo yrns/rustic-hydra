@@ -21,6 +21,7 @@
   (rustic-run-cargo-command a))
 
 (defun rustic-hydra-rerun-last ()
+  (interactive)
   (rustic-run-cargo-command rustic-hydra-last))
 
 (defun rustic-hydra--targets ()
@@ -82,7 +83,7 @@
                       (rustic-run-cargo-command (format "cargo add %s" (car (split-string a)))))
             :caller 'rustic-hydra-add))
 
-(defhydra rustic-hydra (:color blue :hint nil)
+(defhydra rustic-hydra (:color blue :hint nil :pre rustic-hydra--pre)
   "
 _a_: backtrace: %`rustic-compile-backtrace
 _l_: run last: %`rustic-hydra-last
@@ -100,7 +101,6 @@ _b_: build          _e_: clean
   ("x" rustic-hydra-run-example)
   ("n" rustic-hydra-run-bin)
   ("l" rustic-hydra-rerun-last)
-  ;; ("<f5>" rustic-hydra-rerun-last "run last")
   ("c" rustic-cargo-clippy)
   ("o" rustic-cargo-outdated)
   ("e" rustic-cargo-clean)
@@ -110,5 +110,10 @@ _b_: build          _e_: clean
   ("+" rustic-hydra-add)
   ("-" rustic-hydra-rm)
   ("q" nil))
+
+(defun rustic-hydra--pre ()
+  "Define whatever key is used for the hydra body to rerun last."
+  (define-key rustic-hydra/keymap
+    (where-is-internal 'rustic-hydra/body rustic-mode-map t) 'rustic-hydra-rerun-last))
 
 (provide 'rustic-hydra)
