@@ -24,10 +24,17 @@
   (interactive)
   (rustic-run-cargo-command rustic-hydra-last))
 
-(defun rustic-hydra--targets ()
+(defun rustic-hydra--manifest ()
   (let ((json-array-type 'list))
-    (cdr (assoc 'targets (json-read-from-string
-                          (shell-command-to-string "cargo read-manifest"))))))
+    (json-read-from-string
+     (shell-command-to-string "cargo read-manifest"))))
+
+(defun rustic-hydra--deps ()
+  (-map (lambda (a) (cdr (assoc 'name a)))
+        (cdr (assoc 'dependencies (rustic-hydra--manifest)))))
+
+(defun rustic-hydra--targets ()
+  (cdr (assoc 'targets (rustic-hydra--manifest))))
 
 (defun rustic-hydra--examples ()
   (-map (lambda (a) (cdr (assoc 'name a)))
@@ -82,6 +89,18 @@
             :action (lambda (a)
                       (rustic-run-cargo-command (format "cargo add %s" (car (split-string a)))))
             :caller 'rustic-hydra-add))
+
+(defun rustic-hydra-rm ()
+  "Remove a dependency."
+  (interactive)
+  (ivy-read "Remove: "
+            (rustic-hydra--deps)
+            :history 'rustic-hydra-rm-history
+            :require-match t
+            :action (lambda (x)
+                      (rustic-run-cargo-command
+                       (format "cargo rm %s" (intern x))))
+            :caller 'rustic-hydra-rm))
 
 (defhydra rustic-hydra (:color blue :hint nil :pre rustic-hydra--pre)
   "
